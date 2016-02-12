@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.2)
+
+if (NOT DEFINED PACKAGE_CONFIG_DIR)
+    set(PACKAGE_CONFIG_DIR "cmake" CACHE STRING "Common package config dir")
+endif()
 
 # FIXME: It may be removed when we use 2.8.12.
 if(CMAKE_VERSION VERSION_LESS 2.8.12)
@@ -17,7 +21,7 @@ endif()
 # If we are not building as a part of LLVM, build Clang as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
-  project(Clang)
+  project(Clang VERSION 3.7.1)
 
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -72,7 +76,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
 
-  set(LLVM_CMAKE_PATH "${LLVM_BINARY_DIR}/share/llvm/cmake")
+  set(LLVM_CMAKE_PATH "${LLVM_BINARY_DIR}/${PACKAGE_CONFIG_DIR}")
   set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
   if(EXISTS ${LLVMCONFIG_FILE})
     list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
@@ -104,7 +108,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
-    set(LLVM_INCLUDE_TESTS ON)
+    set(LLVM_INCLUDE_TESTS OFF)
   endif()
 
   include_directories("${LLVM_BINARY_DIR}/include" "${LLVM_MAIN_INCLUDE_DIR}")
@@ -489,7 +493,7 @@ add_subdirectory(examples)
 
 option(CLANG_INCLUDE_TESTS
        "Generate build targets for the Clang unit tests."
-       ${LLVM_INCLUDE_TESTS})
+       OFF) #${LLVM_INCLUDE_TESTS}
 
 if( CLANG_INCLUDE_TESTS )
   if(EXISTS ${LLVM_MAIN_SRC_DIR}/utils/unittest/googletest/include/gtest/gtest.h)
@@ -531,23 +535,27 @@ if (CLANG_BUILT_STANDALONE)
   # Generate a list of CMake library targets so that other CMake projects can
   # link against them. LLVM calls its version of this file LLVMExports.cmake, but
   # the usual CMake convention seems to be ${Project}Targets.cmake.
-  set(CLANG_INSTALL_PACKAGE_DIR share/clang/cmake)
+  set(CLANG_INSTALL_PACKAGE_DIR ${PACKAGE_CONFIG_DIR})
   set(clang_cmake_builddir "${CMAKE_BINARY_DIR}/${CLANG_INSTALL_PACKAGE_DIR}")
   get_property(CLANG_EXPORTS GLOBAL PROPERTY CLANG_EXPORTS)
   export(TARGETS ${CLANG_EXPORTS} FILE ${clang_cmake_builddir}/ClangTargets.cmake)
 
-  # Install a <prefix>/share/clang/cmake/ClangConfig.cmake file so that
+  # Install a <prefix>/cmake/ClangConfig.cmake file so that
   # find_package(Clang) works. Install the target list with it.
   install(EXPORT ClangTargets DESTINATION ${CLANG_INSTALL_PACKAGE_DIR})
 
+  include(CMakePackageConfigHelpers)
+  WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/ClangConfig-Version.cmake COMPATIBILITY AnyNewerVersion)
   install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/ClangConfig-Version.cmake
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClangConfig.cmake
-    DESTINATION share/clang/cmake)
+    DESTINATION ${PACKAGE_CONFIG_DIR}
+  )
 
   # Also copy ClangConfig.cmake to the build directory so that dependent projects
   # can build against a build directory of Clang more easily.
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClangConfig.cmake
-    ${CLANG_BINARY_DIR}/share/clang/cmake/ClangConfig.cmake
+    ${CLANG_BINARY_DIR}/${PACKAGE_CONFIG_DIR}/ClangConfig.cmake
     COPYONLY)
 endif ()
