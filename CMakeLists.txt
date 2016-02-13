@@ -380,7 +380,7 @@ macro(add_clang_library name)
 
     if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "libclang")
       install(TARGETS ${name}
-        EXPORT ClangTargets
+        EXPORT clang-config
         LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX}
         ARCHIVE DESTINATION lib${LLVM_LIBDIR_SUFFIX}
         RUNTIME DESTINATION bin)
@@ -538,24 +538,16 @@ if (CLANG_BUILT_STANDALONE)
   set(CLANG_INSTALL_PACKAGE_DIR ${PACKAGE_CONFIG_DIR})
   set(clang_cmake_builddir "${CMAKE_BINARY_DIR}/${CLANG_INSTALL_PACKAGE_DIR}")
   get_property(CLANG_EXPORTS GLOBAL PROPERTY CLANG_EXPORTS)
-  export(TARGETS ${CLANG_EXPORTS} FILE ${clang_cmake_builddir}/ClangTargets.cmake)
+  export(TARGETS ${CLANG_EXPORTS} FILE ${clang_cmake_builddir}/clang-config.cmake)
 
-  # Install a <prefix>/cmake/ClangConfig.cmake file so that
+  # Install a <prefix>/cmake/clang-config.cmake file so that
   # find_package(Clang) works. Install the target list with it.
-  install(EXPORT ClangTargets DESTINATION ${CLANG_INSTALL_PACKAGE_DIR})
+  install(EXPORT clang-config DESTINATION ${CLANG_INSTALL_PACKAGE_DIR})
 
   include(CMakePackageConfigHelpers)
-  WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/ClangConfig-Version.cmake COMPATIBILITY AnyNewerVersion)
+  WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/clang-config-version.cmake COMPATIBILITY AnyNewerVersion)
   install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/ClangConfig-Version.cmake
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClangConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/clang-config-version.cmake
     DESTINATION ${PACKAGE_CONFIG_DIR}
   )
-
-  # Also copy ClangConfig.cmake to the build directory so that dependent projects
-  # can build against a build directory of Clang more easily.
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClangConfig.cmake
-    ${CLANG_BINARY_DIR}/${PACKAGE_CONFIG_DIR}/ClangConfig.cmake
-    COPYONLY)
 endif ()
