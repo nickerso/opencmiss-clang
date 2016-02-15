@@ -28,8 +28,9 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   find_package(LLVM ${LLVM_VERSION} CONFIG REQUIRED)
   #find_program(LLVM_CONFIG "llvm-config")
   if(LLVM_FOUND)
-    message(STATUS "Found LLVM_CONFIG in ${LLVM_DIR}")
-    set(CONFIG_COMMAND llvm-config
+    get_target_property(LLVM_CONFIG_EXEC llvm-config LOCATION)
+    message(STATUS "Found LLVM_CONFIG in ${LLVM_CONFIG_EXEC}")
+    set(CONFIG_COMMAND ${LLVM_CONFIG_EXEC}
       "--assertion-mode"
       "--bindir"
       "--libdir"
