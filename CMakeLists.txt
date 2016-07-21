@@ -173,7 +173,7 @@ else()
   set(BACKEND_PACKAGE_STRING "${PACKAGE_STRING}")
 endif()
 
-find_package(LibXml2 ${LIBXML2_VERSION})
+find_package(LibXml2 ${LIBXML2_VERSION} CONFIG)
 if (LIBXML2_FOUND)
   set(CLANG_HAVE_LIBXML 1)
 endif()
